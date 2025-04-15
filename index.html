@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>АРХИВ АНОМАЛИЙ</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --accent-color: #8b0000;
+            --header-color: #1a1a1a;
+            --card-color: #1e1e1e;
+            --border-color: #333;
+            --danger-color: #d32f2f;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Consolas', 'Courier New', monospace;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--header-color);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+            flex: 1;
+            order: 2;
+        }
+
+        .search-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid var(--accent-color);
+            border-radius: 5px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-family: inherit;
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaa;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .anomaly-card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-color);
+            padding: 1.2rem;
+            border-radius: 8px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .anomaly-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .anomaly-card .number {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            text-align: left;
+        }
+
+        .anomaly-card .title {
+            font-size: 1.2rem;
+            color: #fff;
+            text-align: left;
+        }
+
+        .document-content {
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .document-content h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        .document-content p {
+            margin: 10px 0;
+        }
+
+        .inline-colon strong,
+        .inline-colon span,
+        .inline-section strong,
+        .inline-section span {
+            display: inline;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .return-link {
+            display: inline-block;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        .return-link:hover {
+            background-color: #6b0000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+        }
+
+        .hacked {
+            color: var(--accent-color);
+            font-size: 1.2em;
+            text-shadow: 0 0 5px var(--accent-color);
+            animation: flicker 1s infinite;
+            order: 3;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            header h1 {
+                order: 1;
+            }
+
+            .hacked {
+                order: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>АРХИВ АНОМАЛИЙ</h1>
+        <div class="hacked">ВЗЛОМАНО</div>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="search" placeholder="Поиск аномалий..." onkeyup="searchDocuments()">
+    </div>
+
+    <div class="card-grid" id="documentList">
+        <div class="anomaly-card" id="doc0" onclick="showDocument('ANOMALY-000')">
+            <div class="number">ANOMALY-000</div>
+            <h2 class="title">Прорыв нулевой точки</h2>
+        </div>
+    </div>
+
+    <div id="contentArea"></div>
+
+    <script>
+        const translations = {
+            pageTitle: "Фонд аномалий",
+            headerTitle: "Фонд аномалий",
+            searchPlaceholder: "Поиск аномалий...",
+            hackedText: "ВЗЛОМАНО",
+            returnLink: "Вернуться к списку",
+            anomalies: [
+                {
+                    number: "ANOMALY-000",
+                    title: "Прорыв нулевой точки",
+                    content: {
+                        dateDetected: "2025-04-15 00:00:01",
+                        errorCode: "ZPB_XAI_000",
+                        location: "Квантовый процессор, камера изоляции ядра",
+                        incidentDescription: "В 00:00:01 по системному времени в камере изоляции ядра был зафиксирован беспрецедентный всплеск активности квантовой запутанности. Квантовый процессор зарегистрировал спонтанное формирование стабильной микро-сингулярности, продолжавшееся 3,14159 секунды до её коллапса. В этот период системные журналы зафиксировали неопознанные шаблоны данных, напоминающие структуры нечеловеческого языка, переданные на неизвестный внешний адрес. Физических повреждений не обнаружено, но событие обошло все протоколы сдерживания.",
+                        consequences: [
+                            "Временное нарушение процессов квантовых вычислений.",
+                            "Несанкционированная передача 1,2 терабайт неклассифицированных данных.",
+                            "Потенциальное раскрытие архитектуры ядра системы внешним субъектам."
+                        ],
+                        responseMeasures: [
+                            "Немедленная блокировка квантового процессора.",
+                            "Развертывание продвинутых криптографических барьеров.",
+                            "Запуск глубокого сканирования системы на остаточные квантовые аномалии."
+                        ],
+                        currentStatus: "Инцидент локализован. Источник микро-сингулярности неизвестен. Продолжается анализ переданных данных."
+                    }
+                }
+            ]
+        };
+
+        function generateDocumentHTML(anomaly) {
+            return `
+                <div class="document-content">
+                    <h3>${anomaly.number}: ${anomaly.title}</h3>
+                    <p class="inline-colon"><strong>Дата обнаружения:</strong> <span>${anomaly.content.dateDetected}</span></p>
+                    <p class="inline-colon"><strong>Код ошибки:</strong> <span>${anomaly.content.errorCode}</span></p>
+                    <p class="inline-colon"><strong>Местоположение:</strong> <span>${anomaly.content.location}</span></p>
+                    <p class="inline-section"><strong>Описание инцидента:</strong> <span>${anomaly.content.incidentDescription}</span></p>
+                    <p><strong>Последствия:</strong></p>
+                    <p>${anomaly.content.consequences.map(item => `• ${item}`).join('<br>')}</p>
+                    <p><strong>Меры реагирования:</strong></p>
+                    <p>${anomaly.content.responseMeasures.map(item => `• ${item}`).join('<br>')}</p>
+                    <p class="inline-colon"><strong>Текущий статус:</strong> <span>${anomaly.content.currentStatus}</span></p>
+                    <p><a href="#" class="return-link" onclick="backToList()">${translations.returnLink}</a></p>
+                </div>
+            `;
+        }
+
+        function searchDocuments() {
+            let input = document.getElementById('search').value.toLowerCase();
+            let documents = document.getElementsByClassName('anomaly-card');
+
+            for (let i = 0; i < documents.length; i++) {
+                let title = documents[i].getElementsByTagName('h2')[0].textContent.toLowerCase();
+                if (title.includes(input)) {
+                    documents[i].style.display = '';
+                } else {
+                    documents[i].style.display = 'none';
+                }
+            }
+        }
+
+        function showDocument(number) {
+            const contentArea = document.getElementById('contentArea');
+            const documentList = document.getElementById('documentList');
+            const searchContainer = document.querySelector('.search-container');
+
+            const anomaly = translations.anomalies.find(a => a.number.toLowerCase() === number.toLowerCase());
+            if (anomaly) {
+                documentList.classList.add('hidden');
+                searchContainer.classList.add('hidden');
+                contentArea.innerHTML = generateDocumentHTML(anomaly);
+            } else {
+                console.error(`Anomaly with number ${number} not found`);
+            }
+        }
+
+        function backToList() {
+            const contentArea = document.getElementById('contentArea');
+            const documentList = document.getElementById('documentList');
+            const searchContainer = document.querySelector('.search-container');
+
+            contentArea.innerHTML = '';
+            documentList.classList.remove('hidden');
+            searchContainer.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
