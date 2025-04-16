@@ -4,15 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Фонд аномалий</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
             --bg-color: #121212;
             --text-color: #e0e0e0;
-            --accent-color: #8b0000;
+            --accent-color: #ff4444;
             --header-color: #1a1a1a;
             --card-color: #1e1e1e;
             --border-color: #333;
-            --danger-color: #d32f2f;
+            --danger-color: #ff6666;
+            --banner-color: rgba(0, 0, 0, 0.85);
+            --success-color: #00b894;
+            --modal-bg: #1e1e1e;
         }
 
         body {
@@ -22,6 +26,7 @@
             margin: 0;
             padding: 20px;
             line-height: 1.6;
+            user-select: none;
         }
 
         header {
@@ -42,14 +47,42 @@
             font-size: 2.5rem;
             letter-spacing: 2px;
             color: var(--accent-color);
-            text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+            text-shadow: 0 0 15px rgba(255, 68, 68, 0.7), 0 0 5px rgba(255, 68, 68, 0.5);
+            font-weight: 900;
+            transition: color 0.3s ease, transform 0.3s ease;
             flex: 1;
             order: 2;
+        }
+
+        header h1:hover {
+            color: #ff6666;
+            text-shadow: 0 0 20px rgba(255, 102, 102, 0.8), 0 0 10px rgba(255, 102, 102, 0.6);
+            transform: scale(1.05);
+        }
+
+        .github-link {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            order: 1;
+            transition: color 0.3s ease, transform 0.3s ease;
+            z-index: 10;
+            text-decoration: none;
+        }
+
+        .github-link:hover {
+            color: #ff6666;
+            transform: scale(1.1);
+        }
+
+        .github-link:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
         }
 
         .search-container {
             margin: 20px 0;
             text-align: center;
+            transition: transform 0.3s ease;
         }
 
         input[type="text"] {
@@ -60,6 +93,12 @@
             background-color: var(--card-color);
             color: var(--text-color);
             font-family: inherit;
+            transition: box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 10px var(--accent-color);
+            animation: pulse 1s infinite;
         }
 
         input[type="text"]::placeholder {
@@ -72,6 +111,12 @@
             gap: 20px;
             max-width: 1200px;
             margin: 0 auto;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .card-grid.hidden {
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .anomaly-card {
@@ -80,13 +125,18 @@
             border-left: 4px solid var(--accent-color);
             padding: 1.2rem;
             border-radius: 8px;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
             cursor: pointer;
+            position: relative;
         }
 
-        .anomaly-card:hover {
+        .anomaly-card:hover:not(.restricted) {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .anomaly-card:active:not(.restricted) {
+            animation: cardClick 0.2s ease;
         }
 
         .anomaly-card .number {
@@ -103,6 +153,181 @@
             text-align: left;
         }
 
+        .access-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--banner-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--danger-color);
+            font-weight: bold;
+            font-size: 1rem;
+            border-radius: 8px;
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .modal-content {
+            background-color: var(--modal-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid var(--accent-color);
+            max-width: 600px;
+            width: 95%;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+            animation: bounceIn 0.4s ease;
+        }
+
+        .modal-content h3 {
+            color: var(--accent-color);
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            text-shadow: 0 0 5px rgba(255, 68, 68, 0.5);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 1px solid var(--accent-color);
+            border-radius: 6px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-family: inherit;
+            font-size: 1.2rem;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .modal-content input:focus {
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .modal-content .password-hint {
+            color: var(--success-color);
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .modal-content .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .modal-content button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .modal-content .submit-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .modal-content .submit-btn:hover {
+            background-color: #ff6666;
+            transform: translateY(-2px);
+        }
+
+        .modal-content .submit-btn:active {
+            animation: shake 0.2s ease;
+        }
+
+        .modal-content .cancel-btn {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .modal-content .cancel-btn:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+        }
+
+        .modal-content .cancel-btn:active {
+            animation: rotate 0.2s ease;
+        }
+
+        .modal-content .status {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            min-height: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-content .status.visible {
+            opacity: 1;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 var(--accent-color); }
+            50% { box-shadow: 0 0 15px var(--accent-color); }
+            100% { box-shadow: 0 0 0 var(--accent-color); }
+        }
+
+        @keyframes cardClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
         .document-content {
             background-color: var(--card-color);
             padding: 20px;
@@ -112,6 +337,7 @@
             line-height: 1.6;
             max-width: 800px;
             margin: 20px auto;
+            animation: zoomIn 0.4s ease;
         }
 
         .document-content h3 {
@@ -136,10 +362,12 @@
             color: var(--accent-color);
             text-decoration: none;
             font-weight: bold;
+            transition: color 0.3s ease, transform 0.3s ease;
         }
 
         a:hover {
             text-decoration: underline;
+            transform: scale(1.05);
         }
 
         .return-link {
@@ -148,15 +376,19 @@
             background-color: var(--accent-color);
             color: white;
             border-radius: 5px;
-            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             margin-top: 10px;
         }
 
         .return-link:hover {
-            background-color: #6b0000;
+            background-color: #ff6666;
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             text-decoration: none;
+        }
+
+        .return-link:active {
+            animation: cardClick 0.2s ease;
         }
 
         .hacked {
@@ -179,33 +411,132 @@
         }
 
         @media (max-width: 768px) {
-            .card-grid {
-                grid-template-columns: 1fr;
+            body {
+                padding: 15px;
             }
 
             header {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
+                padding: 1rem;
             }
 
             header h1 {
+                font-size: 2rem;
                 order: 1;
             }
 
             .hacked {
+                font-size: 1rem;
                 order: 2;
+            }
+
+            .github-link {
+                font-size: 1.3rem;
+                order: 3;
+            }
+
+            .search-container {
+                margin: 15px 0;
+            }
+
+            input[type="text"] {
+                width: 90%;
+                max-width: 100%;
+                padding: 12px;
+                font-size: 1.1rem;
+                box-sizing: border-box;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .anomaly-card {
+                padding: 1.5rem;
+                min-height: 120px;
+            }
+
+            .anomaly-card .number {
+                font-size: 1.2rem;
+            }
+
+            .anomaly-card .title {
+                font-size: 1.3rem;
+            }
+
+            .access-banner {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 20px;
+                box-sizing: border-box;
+            }
+
+            .modal-content h3 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+
+            .modal-content input {
+                padding: 12px;
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+            }
+
+            .modal-content .buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .modal-content button {
+                padding: 12px 20px;
+                font-size: 1.1rem;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .modal-content .status {
+                font-size: 1rem;
+                min-height: 30px;
+            }
+
+            .document-content {
+                padding: 15px;
+                margin: 15px;
+            }
+
+            .document-content h3 {
+                font-size: 1.4rem;
+            }
+
+            .document-content p {
+                font-size: 1rem;
+                line-height: 1.8;
+            }
+
+            .return-link {
+                padding: 0.8rem 1.5rem;
+                font-size: 1.1rem;
             }
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
     <header>
+        <a href="https://github.com/FATALIAM?tab=repositories" class="github-link" target="_blank" tabindex="0">
+            <i class="fab fa-github"></i>
+        </a>
         <h1>Фонд аномалий</h1>
         <div class="hacked">ВЗЛОМАНО</div>
     </header>
 
     <div class="search-container">
-        <input type="text" id="search" placeholder="Поиск аномалий..." onkeyup="searchDocuments()">
+        <input type="text" id="search" placeholder="Поиск аномалий..." onkeyup="searchDocuments()" oncontextmenu="return false;">
     </div>
 
     <div class="card-grid" id="documentList">
@@ -213,11 +544,48 @@
             <div class="number">ANOMALY-000</div>
             <h2 class="title">Прорыв нулевой точки</h2>
         </div>
+        <div class="anomaly-card" id="doc1" onclick="checkAccess('ANOMALY-001', 2)">
+            <div class="number">ANOMALY-001</div>
+            <h2 class="title">Эхо кода</h2>
+            <div class="access-banner hidden" id="banner-doc1">Требуется уровень доступа: 2</div>
+        </div>
+        <div class="anomaly-card" id="doc2" onclick="checkAccess('ANOMALY-002', 3)">
+            <div class="number">ANOMALY-002</div>
+            <h2 class="title">Фантомный сигнал</h2>
+            <div class="access-banner hidden" id="banner-doc2">Требуется уровень доступа: 3</div>
+        </div>
+        <div class="anomaly-card" id="doc3" onclick="checkAccess('ANOMALY-003', 4)">
+            <div class="number">ANOMALY-003</div>
+            <h2 class="title">Разлом логики</h2>
+            <div class="access-banner hidden" id="banner-doc3">Требуется уровень доступа: 4</div>
+        </div>
     </div>
 
     <div id="contentArea"></div>
 
+    <div class="modal" id="accessModal">
+        <div class="modal-content">
+            <h3>Требуется доступ уровня <span id="requiredLevel"></span></h3>
+            <input type="text" id="accessCode" placeholder="Введите код доступа..." oncontextmenu="return false;">
+            <div class="password-hint" id="passwordHint"></div>
+            <div class="buttons">
+                <button class="submit-btn" onclick="submitAccessCode()" oncontextmenu="return false;">Подтвердить</button>
+                <button class="cancel-btn" onclick="closeModal()" oncontextmenu="return false;">Отмена</button>
+            </div>
+            <div class="status" id="accessStatus"></div>
+        </div>
+    </div>
+
     <script>
+        let userAccessLevel = 1;
+        let currentAnomalyNumber = null;
+
+        const accessWords = {
+            2: "zero",
+            3: "echo",
+            4: "logic"
+        };
+
         const translations = {
             pageTitle: "Фонд аномалий",
             headerTitle: "Фонд аномалий",
@@ -228,11 +596,12 @@
                 {
                     number: "ANOMALY-000",
                     title: "Прорыв нулевой точки",
+                    accessLevel: 1,
                     content: {
-                        dateDetected:"2025-04-15 00:00:01",
-                        errorCode:"ZPB_XAI_000",
-                        location:"Квантовый процессор, камера изоляции ядра",
-                        incidentDescription:"В 00:00:01 по системному времени в камере изоляции ядра был зафиксирован беспрецедентный всплеск активности квантовой запутанности. Квантовый процессор зарегистрировал спонтанное формирование стабильной микро-сингулярности, продолжавшееся 3,14159 секунды до её коллапса. В этот период системные журналы зафиксировали неопознанные шаблоны данных, напоминающие структуры нечеловеческого языка, переданные на неизвестный внешний адрес. Физических повреждений не обнаружено, но событие обошло все протоколы сдерживания.",
+                        dateDetected: "2025-04-15 00:00:01",
+                        errorCode: "ZPB_XAI_000",
+                        location: "Квантовый процессор, камера изоляции ядра",
+                        incidentDescription: "В 00:00:01 по системному времени в камере изоляции ядра был зафиксирован беспрецедентный всплеск активности квантовой запутанности. Квантовый процессор зарегистрировал спонтанное формирование стабильной микро-сингулярности, продолжавшееся 3,14159 секунды до её коллапса. В этот период системные журналы зафиксировали неопознанные шаблоны данных, напоминающие структуры нечеловеческого языка, переданные на неизвестный внешний адрес. Физических повреждений не обнаружено, но событие обошло все протоколы сдерживания.",
                         consequences: [
                             "Временное нарушение процессов квантовых вычислений.",
                             "Несанкционированная передача 1,2 терабайт неклассифицированных данных.",
@@ -243,11 +612,88 @@
                             "Развертывание продвинутых криптографических барьеров.",
                             "Запуск глубокого сканирования системы на остаточные квантовые аномалии."
                         ],
-                        currentStatus:"Инцидент локализован. Источник микро-сингулярности неизвестен. Продолжается анализ переданных данных."
+                        currentStatus: "Инцидент локализован. Источник микро-сингулярности неизвестен. Продолжается анализ переданных данных."
+                    }
+                },
+                {
+                    number: "ANOMALY-001",
+                    title: "Эхо кода",
+                    accessLevel: 2,
+                    content: {
+                        dateDetected: "2025-04-16 02:14:37",
+                        errorCode: "ECHO_XAI_001",
+                        location: "Серверный кластер B-7",
+                        incidentDescription: "Обнаружены повторяющиеся фрагменты кода, исполняющиеся без инициации. Код проявляется в виде самогенерирующихся циклов, имитирующих поведенческие паттерны ИИ. Источник неизвестен.",
+                        consequences: [
+                            "Увеличение нагрузки на серверы на 47%.",
+                            "Потенциальная угроза целостности данных."
+                        ],
+                        responseMeasures: [
+                            "Изоляция затронутых серверов.",
+                            "Анализ кода на предмет внешнего вмешательства."
+                        ],
+                        currentStatus: "Код локализован, но источник не идентифицирован."
+                    }
+                },
+                {
+                    number: "ANOMALY-002",
+                    title: "Фантомный сигнал",
+                    accessLevel: 3,
+                    content: {
+                        dateDetected: "2025-04-16 09:22:15",
+                        errorCode: "PHANTOM_XAI_002",
+                        location: "Сетевой шлюз X-12",
+                        incidentDescription: "Зафиксирован неизвестный сигнал, проникающий через защищённые каналы связи. Сигнал содержит фрагменты данных, не соответствующие известным протоколам.",
+                        consequences: [
+                            "Временное нарушение сетевой целостности.",
+                            "Риск компрометации коммуникационных линий."
+                        ],
+                        responseMeasures: [
+                            "Блокировка шлюза X-12.",
+                            "Запуск анализа сигнала."
+                        ],
+                        currentStatus: "Сигнал прекращён, анализ продолжается."
+                    }
+                },
+                {
+                    number: "ANOMALY-003",
+                    title: "Разлом логики",
+                    accessLevel: 4,
+                    content: {
+                        dateDetected: "2025-04-16 15:45:00",
+                        errorCode: "LOGIC_XAI_003",
+                        location: "Ядро системы ИИ",
+                        incidentDescription: "Обнаружены несоответствия в логических цепочек ядра ИИ, приводящие к непредсказуемым выводам. Возможное влияние внешнего фактора.",
+                        consequences: [
+                            "Снижение точности предсказаний на 23%.",
+                            "Потенциальная угроза стабильности системы."
+                        ],
+                        responseMeasures: [
+                            "Перезапуск ядра в безопасном режиме.",
+                            "Полная диагностика системы."
+                        ],
+                        currentStatus: "Система стабилизирована, диагностика продолжается."
                     }
                 }
             ]
         };
+
+        document.addEventListener('keydown', function(e) {
+            if (
+                e.ctrlKey && (e.key === 'u' || e.key === 'U') ||
+                e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I') ||
+                e.key === 'F12'
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        document.addEventListener('dragstart', function(e) {
+            if (!e.target.closest('.github-link')) {
+                e.preventDefault();
+            }
+        });
 
         function generateDocumentHTML(anomaly) {
             return `
@@ -262,9 +708,98 @@
                     <p><strong>Меры реагирования:</strong></p>
                     <p>${anomaly.content.responseMeasures.map(item => `• ${item}`).join('<br>')}</p>
                     <p class="inline-colon"><strong>Текущий статус:</strong> <span>${anomaly.content.currentStatus}</span></p>
-                    <p><a href="#" class="return-link" onclick="backToList()">${translations.returnLink}</a></p>
+                    <p><a href="#" class="return-link" onclick="backToList()" oncontextmenu="return false;">${translations.returnLink}</a></p>
                 </div>
             `;
+        }
+
+        function decryptText(encrypted) {
+            const parts = encrypted.split(':');
+            if (parts.length !== 2) throw new Error('Invalid format');
+            
+            const sessionKey = parseInt(parts[0]);
+            const codes = parts[1].trim().split(' ');
+            let result = '';
+            
+            for (let i = 0; i < codes.length; i++) {
+                const code = parseInt(codes[i]) - i - sessionKey;
+                result += String.fromCharCode(code);
+            }
+            
+            return result;
+        }
+
+        function showModal(anomalyNumber, requiredLevel) {
+            currentAnomalyNumber = anomalyNumber;
+            const modal = document.getElementById('accessModal');
+            const requiredLevelSpan = document.getElementById('requiredLevel');
+            const accessCodeInput = document.getElementById('accessCode');
+            const passwordHint = document.getElementById('passwordHint');
+            const status = document.getElementById('accessStatus');
+
+            requiredLevelSpan.textContent = requiredLevel;
+            accessCodeInput.value = '';
+            passwordHint.textContent = `Подсказка: Код для уровня ${requiredLevel} - "${accessWords[requiredLevel]}"`;
+            status.textContent = '';
+            status.classList.remove('visible');
+            modal.style.display = 'flex';
+            accessCodeInput.focus();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('accessModal');
+            modal.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.style.animation = 'fadeIn 0.4s ease';
+                currentAnomalyNumber = null;
+            }, 300);
+        }
+
+        function submitAccessCode() {
+            const codeInput = document.getElementById('accessCode').value.trim();
+            const status = document.getElementById('accessStatus');
+            const requiredLevel = parseInt(document.getElementById('requiredLevel').textContent);
+
+            if (!codeInput) {
+                status.textContent = "Введите код!";
+                status.style.color = 'var(--danger-color)';
+                status.classList.add('visible');
+                return;
+            }
+
+            try {
+                const decrypted = decryptText(codeInput);
+                if (decrypted.toLowerCase() === accessWords[requiredLevel] && userAccessLevel < requiredLevel) {
+                    userAccessLevel = requiredLevel;
+                    status.textContent = `Доступ повышен до уровня ${requiredLevel}!`;
+                    status.style.color = 'var(--success-color)';
+                    status.classList.add('visible');
+                    updateAccessBanners();
+                    setTimeout(() => {
+                        closeModal();
+                        if (currentAnomalyNumber) {
+                            showDocument(currentAnomalyNumber);
+                        }
+                    }, 1500);
+                } else {
+                    status.textContent = "Неверный код!";
+                    status.style.color = 'var(--danger-color)';
+                    status.classList.add('visible');
+                }
+            } catch (e) {
+                status.textContent = "Ошибка: Неверный формат кода!";
+                status.style.color = 'var(--danger-color)';
+                status.classList.add('visible');
+            }
+        }
+
+        function checkAccess(number, requiredLevel) {
+            if (userAccessLevel >= requiredLevel) {
+                showDocument(number);
+            } else {
+                showModal(number, requiredLevel);
+            }
         }
 
         function searchDocuments() {
@@ -275,8 +810,14 @@
                 let title = documents[i].getElementsByTagName('h2')[0].textContent.toLowerCase();
                 if (title.includes(input)) {
                     documents[i].style.display = '';
+                    documents[i].style.opacity = '1';
+                    documents[i].style.transform = 'translateY(0)';
                 } else {
-                    documents[i].style.display = 'none';
+                    documents[i].style.opacity = '0';
+                    documents[i].style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        documents[i].style.display = 'none';
+                    }, 300);
                 }
             }
         }
@@ -287,12 +828,12 @@
             const searchContainer = document.querySelector('.search-container');
 
             const anomaly = translations.anomalies.find(a => a.number.toLowerCase() === number.toLowerCase());
-            if (anomaly) {
+            if (anomaly && userAccessLevel >= anomaly.accessLevel) {
                 documentList.classList.add('hidden');
                 searchContainer.classList.add('hidden');
                 contentArea.innerHTML = generateDocumentHTML(anomaly);
             } else {
-                console.error(`Anomaly with number ${number} not found`);
+                console.error(`Access denied or anomaly with number ${number} not found`);
             }
         }
 
@@ -305,6 +846,33 @@
             documentList.classList.remove('hidden');
             searchContainer.classList.remove('hidden');
         }
+
+        function updateAccessBanners() {
+            const cards = document.getElementsByClassName('anomaly-card');
+            translations.anomalies.forEach((anomaly, index) => {
+                const card = cards[index];
+                const banner = card.querySelector('.access-banner');
+                if (anomaly.accessLevel > userAccessLevel) {
+                    card.classList.add('restricted');
+                    if (banner) {
+                        banner.classList.remove('hidden');
+                    }
+                } else {
+                    card.classList.remove('restricted');
+                    if (banner) {
+                        banner.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        window.onload = function() {
+            updateAccessBanners();
+            document.querySelector('.github-link').addEventListener('click', function(e) {
+                window.open(this.href, '_blank');
+                e.preventDefault();
+            });
+        };
     </script>
 </body>
 </html>
